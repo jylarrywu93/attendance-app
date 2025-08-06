@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>員工點名系統</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { color: #333; }
+    label, input, button { margin-top: 10px; display: block; width: 100%; max-width: 300px; }
+    table { margin-top: 20px; border-collapse: collapse; width: 100%; max-width: 600px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>員工點名系統</h1>
+  <label for="name">員工姓名：</label>
+  <input type="text" id="name" placeholder="輸入姓名">
+
+  <button onclick="checkIn()">📍打卡</button>
+  <button onclick="downloadCSV()">⬇️ 匯出點名紀錄</button>
+
+  <table id="attendanceTable">
+    <thead>
+      <tr>
+        <th>姓名</th>
+        <th>打卡時間</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    function checkIn() {
+      const name = document.getElementById('name').value.trim();
+      if (!name) return alert('請輸入姓名');
+      const time = new Date().toLocaleString();
+      const table = document.getElementById('attendanceTable').getElementsByTagName('tbody')[0];
+      const newRow = table.insertRow();
+      newRow.insertCell(0).innerText = name;
+      newRow.insertCell(1).innerText = time;
+
+      // 儲存在本機瀏覽器
+      const records = JSON.parse(localStorage.getItem('attendance') || '[]');
+      records.push({ name, time });
+      localStorage.setItem('attendance', JSON.stringify(records));
+    }
+
+    function downloadCSV() {
+      const records = JSON.parse(localStorage.getItem('attendance') || '[]');
+      if (records.length === 0) return alert('沒有任何紀錄');
+      let csv = '姓名,打卡時間\n';
+      records.forEach(r => {
+        csv += `${r.name},${r.time}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'attendance.csv';
+      link.click();
+    }
+
+    // 重新載入網頁時顯示歷史紀錄
+    window.onload = () => {
+      const records = JSON.parse(localStorage.getItem('attendance') || '[]');
+      const table = document.getElementById('attendanceTable').getElementsByTagName('tbody')[0];
+      records.forEach(({ name, time }) => {
+        const newRow = table.insertRow();
+        newRow.insertCell(0).innerText = name;
+        newRow.insertCell(1).innerText = time;
+      });
+    }
+  </script>
+</body>
+</html>
