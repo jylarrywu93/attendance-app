@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>每日員工點名系統（手機版）</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.8em;
+    }
+    .stats, .add-employee {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .stat-box {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      color: white;
+    }
+    .present { background-color: #28a745; }
+    .late { background-color: #ffc107; color: black; }
+    .absent { background-color: #dc3545; }
+    .total { background-color: #007bff; }
+
+    .add-employee input {
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .add-employee button {
+      padding: 10px 16px;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      min-width: 600px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    .btn {
+      padding: 10px;
+      margin: 2px;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.9em;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-green { background-color: #28a745; color: white; }
+    .btn-yellow { background-color: #ffc107; color: black; }
+    .btn-red { background-color: #dc3545; color: white; }
+
+    @media (max-width: 600px) {
+      .stat-box { font-size: 14px; padding: 8px 12px; }
+      .add-employee input, .add-employee button {
+        width: 100%;
+        margin-top: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>每日員工點名系統</h1>
+
+<div class="stats">
+  <div class="stat-box present">已出席: <span id="presentCount">0</span></div>
+  <div class="stat-box absent">缺席: <span id="absentCount">3</span></div>
+  <div class="stat-box late">遲到: <span id="lateCount">0</span></div>
+  <div class="stat-box total">總人數: <span id="totalCount">3</span></div>
+</div>
+
+<div class="add-employee">
+  <input type="text" id="empId" placeholder="員工編號">
+  <input type="text" id="empName" placeholder="姓名">
+  <input type="text" id="empDept" placeholder="部門">
+  <button onclick="addEmployee()">新增</button>
+  <button onclick="exportCSV()">匯出 CSV</button>
+</div>
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>員工編號</th>
+        <th>姓名</th>
+        <th>部門</th>
+        <th>出席狀態</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="employeeTable">
+      <tr>
+        <td>E001</td>
+        <td>王小明</td>
+        <td>資訊部</td>
+        <td class="status">缺席</td>
+        <td>
+          <button class="btn btn-green" onclick="markStatus(this, '出席')">出席</button>
+          <button class="btn btn-yellow" onclick="markStatus(this, '遲到')">遲到</button>
+          <button class="btn btn-red" onclick="markStatus(this, '缺席')">缺席</button>
+        </td>
+      </tr>
+      <tr>
+        <td>E002</td>
+        <td>李美華</td>
+        <td>人事部</td>
+        <td class="status">缺席</td>
+        <td>
+          <button class="btn btn-green" onclick="markStatus(this, '出席')">出席</button>
+          <button class="btn btn-yellow" onclick="markStatus(this, '遲到')">遲到</button>
+          <button class="btn btn-red" onclick="markStatus(this, '缺席')">缺席</button>
+        </td>
+      </tr>
+      <tr>
+        <td>E003</td>
+        <td>張志強</td>
+        <td>業務部</td>
+        <td class="status">缺席</td>
+        <td>
+          <button class="btn btn-green" onclick="markStatus(this, '出席')">出席</button>
+          <button class="btn btn-yellow" onclick="markStatus(this, '遲到')">遲到</button>
+          <button class="btn btn-red" onclick="markStatus(this, '缺席')">缺席</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+function markStatus(button, status) {
+  const row = button.closest("tr");
+  row.querySelector(".status").textContent = status;
+  updateCounts();
+}
+
+function updateCounts() {
+  const rows = document.querySelectorAll("#employeeTable tr");
+  let present = 0, late = 0, absent = 0;
+  rows.forEach(row => {
+    const status = row.querySelector(".status").textContent;
+    if (status === "出席") present++;
+    else if (status === "遲到") late++;
+    else absent++;
+  });
+  document.getElementById("presentCount").textContent = present;
+  document.getElementById("lateCount").textContent = late;
+  document.getElementById("absentCount").textContent = absent;
+  document.getElementById("totalCount").textContent = rows.length;
+}
+
+function addEmployee() {
+  const id = document.getElementById("empId").value.trim();
+  const name = document.getElementById("empName").value.trim();
+  const dept = document.getElementById("empDept").value.trim();
+  if (!id || !name || !dept) {
+    alert("請輸入完整資料！");
+    return;
+  }
+
+  const table = document.getElementById("employeeTable");
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${id}</td>
+    <td>${name}</td>
+    <td>${dept}</td>
+    <td class="status">缺席</td>
+    <td>
+      <button class="btn btn-green" onclick="markStatus(this, '出席')">出席</button>
+      <button class="btn btn-yellow" onclick="markStatus(this, '遲到')">遲到</button>
+      <button class="btn btn-red" onclick="markStatus(this, '缺席')">缺席</button>
+    </td>`;
+  table.appendChild(row);
+  updateCounts();
+
+  document.getElementById("empId").value = "";
+  document.getElementById("empName").value = "";
+  document.getElementById("empDept").value = "";
+}
+
+function exportCSV() {
+  let csv = "員工編號,姓名,部門,出席狀態\\n";
+  const rows = document.querySelectorAll("#employeeTable tr");
+  rows.forEach(row => {
+    const cols = row.querySelectorAll("td");
+    const empId = cols[0].textContent;
+    const name = cols[1].textContent;
+    const dept = cols[2].textContent;
+    const status = cols[3].textContent;
+    csv += `${empId},${name},${dept},${status}\\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.setAttribute("href", URL.createObjectURL(blob));
+  link.setAttribute("download", "點名記錄.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
+
+</body>
+</html>
